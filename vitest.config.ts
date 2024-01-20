@@ -9,7 +9,10 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   test: {
     globals: true,
+    // environment: "vprisma",
     environment: "happy-dom",
     setupFiles: ["./test/setup-test-env.ts"],
+    // setupFiles: ["vitest-environment-vprisma/setup", "vitest.setup.ts"]
+      
   },
 });

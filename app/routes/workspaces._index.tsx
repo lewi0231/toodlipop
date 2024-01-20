@@ -1,12 +1,9 @@
-import { Link } from "@remix-run/react";
-
 export default function WorkspaceIndexPage() {
   return (
-    <p>
-      No note selected. Select a note on the left, or{" "}
-      <Link to="new" className="text-blue-500 underline">
-        create a new workspace.
-      </Link>
-    </p>
+    <div className=" min-h-lvh bg-my-primary">
+      <p className="">
+        No note selected. Select a note on the left, or create a workspace.
+      </p>
+    </div>
   );
 }

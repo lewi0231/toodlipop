@@ -1,66 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  password   Password?
+  id         String      @id @default(cuid())
+  email      String      @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   notes      Note[]
+  password   Password?
   workspaces Workspace[]
 }
 
 model Password {
-  hash String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  hash   String
   userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Note {
-  id    String @id @default(cuid())
-  title String
-  body  String
-
+  id        String   @id @default(cuid())
+  title     String
+  body      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Todo {
-  id    String @id @default(cuid())
-  title String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  complete  Boolean  @default(false)
-
-  goal       Float @default(1.0)
-  hoursWeek  Float @default(0)
-  hoursDay   Float @default(0)
-  hoursMonth Float @default(0)
-
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id          String    @id @default(cuid())
+  title       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  complete    Boolean   @default(false)
+  goal        Float     @default(1.0)
   workspaceId String
+  timers      Timer[]
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model Workspace {
-  id    String @id @default(cuid())
-  title String
-
-  todos Todo[]
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id     String @id @default(cuid())
+  title  String
   userId String
+  todos  Todo[]
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Timer {
+  id               String   @id @default(cuid())
+  startTime        DateTime
+  endTime          DateTime
+  secondsRemaining Int
+  todoId           String
+  todo             Todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
 }
