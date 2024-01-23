@@ -35,8 +35,15 @@ export default function WorkspaceDetailsPage() {
   return (
     <section
       id="note-list"
-      className="bg-my-primary w-full flex flex-col  h-full"
+      className="bg-my-primary w-full flex flex-col  h-full p-10"
     >
+      <div className="sub-header flex justify-between">
+        <h1 className=" text-4xl">Tasks</h1>
+        <div>
+          <h1 className=" text-xl">AUGUST</h1>
+          <h1 className=" text-7xl">06</h1>
+        </div>
+      </div>
       <Form
         className="flex flex-col text-left w-full"
         ref={inputFormRef}
@@ -49,19 +56,18 @@ export default function WorkspaceDetailsPage() {
           required
           disabled={isSubmitting}
           placeholder="+ add a task and hit enter"
-          className=" bg-my-tertiary bg-opacity-10 w-2/3 placeholder-my-tertiary placeholder-opacity-70 ml-10 pt-4 pb-4"
+          className=" bg-my-tertiary bg-opacity-10 placeholder:pl-10 w-1/2 placeholder-my-tertiary placeholder-opacity-70 pt-2 pb-2"
         />
       </Form>
-
-      <div className="flex w-2/3  pl-5 gap-5 mt-20 ml-10">
+      <div className="flex w-2/3  pl-5 gap-5 mt-10">
         <h1 className=" text-xl w-1/2 font-semibold p-0">Current </h1>
         <div className="w-1/2 flex gap-5 opacity-60 text-sm h-10 items-end">
-          <span className=" w-1/3 text-center ">month</span>
+          {/* <span className=" w-1/3 text-center ">month</span>
           <span className=" w-1/3 text-center">week</span>
-          <span className=" w-1/3 text-center">day</span>
+          <span className=" w-1/3 text-center">day</span> */}
         </div>
       </div>
-      <div className="flex flex-col gap-3 ml-10 w-full">
+      <div className="flex flex-col gap-3w-full gap-3">
         <Outlet />
       </div>
     </section>

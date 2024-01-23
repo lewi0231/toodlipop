@@ -3,7 +3,7 @@ import type { Timer, Todo } from '@prisma/client';
 import { prisma } from "~/db.server";
 
 export async function getTimerList({ todoId }: { todoId: string}) {
-    const timings = await prisma.timer.findMany({
+    const timings =  prisma.timer.findMany({
         where: { todoId },
         orderBy: { endTime: "desc"}
     })

@@ -7,7 +7,8 @@ export default {
       colors: {
         'my-primary': '#fEFADE',
         'my-secondary': '#D47B01',
-        'my-tertiary': '#1e1e1e'
+        'my-tertiary': '#1e1e1e',
+        'my-primary-complement': '#DEE2FE'
       }
     },
   },

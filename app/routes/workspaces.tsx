@@ -50,7 +50,7 @@ export default function WorkspacesPage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="flex items-center justify-between bg-my-primary p-4 text-black">
+      <header className="flex items-center justify-between bg-my-secondary p-4 text-black">
         <h1 className="text-3xl font-bold">
           <Link to=".">Toodlipop</Link>
         </h1>

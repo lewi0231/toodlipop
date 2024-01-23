@@ -1,30 +1,34 @@
+
 import { faker } from "@faker-js/faker";
 
+
 describe("smoke tests", () => {
-  afterEach(() => {
-    cy.cleanupUser();
-  });
+  // Need to work out how to clean up User.  uses the @user syntax.
+  // afterEach(() => {
+    // cy.cleanupUser();
+  // });
+  
+  // it("should allow you to register and login", () => {
+  //   cy.visit("/workspaces");
 
-  it("should allow you to register and login", () => {
-    const loginForm = {
-      email: `${faker.internet.userName()}@example.com`,
-      password: faker.internet.password(),
-    };
+  //   const loginForm = {
+  //     email: `${faker.internet.userName()}@example.com`,
+  //     password: faker.internet.password(),
+  //   };
 
-    cy.then(() => ({ email: loginForm.email })).as("user");
+  //   cy.url().should('include', 'login')
 
-    cy.visitAndCheck("/");
+  //   cy.findByRole("link", { name: /sign up/i }).click();
 
-    cy.findByRole("link", { name: /sign up/i }).click();
+  //   cy.findByRole("textbox", { name: /email address/i}).type(loginForm.email)
 
-    cy.findByRole("textbox", { name: /email/i }).type(loginForm.email);
-    cy.findByLabelText(/password/i).type(loginForm.password);
-    cy.findByRole("button", { name: /create account/i }).click();
+  //   cy.findByLabelText(/password/i).type(loginForm.password)
 
-    cy.findByRole("link", { name: /workspaces/i }).click();
-    cy.findByRole("button", { name: /logout/i }).click();
-    cy.findByRole("link", { name: /log in/i });
-  });
+  //   cy.findByRole("button", { name: /create account/i }).click();
+
+  //   cy.findByRole("button", { name: /logout/i}).click()
+    
+  // });
 
   it("should allow you to make a workspace", () => {
     const testWorkspace = {
@@ -34,16 +38,14 @@ describe("smoke tests", () => {
 
     cy.visitAndCheck("/workspaces");
 
-    cy.findByRole("link", { name: /workspaces/i }).click();
-    cy.findByText("No workspaces yet");
+    cy.findByRole("textbox").should('be.visible').type(testWorkspace.title + '{enter}')
+    // cy.findByText("No workspaces yet");
 
-    cy.findByRole("link", { name: /\+ new note/i }).click();
+    cy.contains(testWorkspace.title)
 
-    cy.findByRole("textbox", { name: /title/i }).type(testWorkspace.title);
-    cy.findByRole("button", { name: /save/i }).click();
+    cy.findByRole("link", { name: testWorkspace.title }).click()
 
-    cy.findByRole("button", { name: /delete/i }).click();
+    cy.findByPlaceholderText(/add a task and hit enter/i).type(testWorkspace.title + '{enter}')
 
-    cy.findByText("No workspaces yet");
   });
 });

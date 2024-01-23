@@ -74,3 +74,20 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
+
+export function deStringifyArrayOfObjects<T extends Record<K, string>, K extends keyof T>(
+ objects : T[],
+  dateKeys: K[] 
+): T[] {
+  if (!objects) {
+    return []
+  }
+
+  return objects.map(object => {
+    const newObject: Partial<T> = {...object}
+    dateKeys.forEach(key => {
+      newObject[key] = new Date(object[key]) as unknown as T[K]
+    })
+    return newObject as T;
+  })
+}

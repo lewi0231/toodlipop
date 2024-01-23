@@ -15,7 +15,7 @@ export function getTodoListItems({ workspaceId }: { workspaceId: Workspace['id']
   try {
     todos = prisma.todo.findMany({
        where: { workspaceId },
-      //  include: { timers: true},
+       include: { timers: true},
        orderBy: { updatedAt: "desc" },
     });
     
