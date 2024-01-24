@@ -16,8 +16,8 @@ const WorkspaceList = ({ workspaces }: WorkspaceProps) => {
             <li key={workspace.id}>
               <NavLink
                 className={({ isActive }) =>
-                  `block border-b hover:bg-my-secondary hover:bg-opacity-70 p-4 text-md ${
-                    isActive ? "bg-my-secondary bg-opacity-40" : ""
+                  `block border-none hover:bg-my-primary  p-4 text-md ${
+                    isActive ? "bg-my-primary bg-opacity-80" : ""
                   }`
                 }
                 to={`${workspace.id}/todos`}

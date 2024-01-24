@@ -43,6 +43,7 @@ model Todo {
   workspaceId String
   timers      Timer[]
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subtask     Subtask[]
 }
 
 model Workspace {
@@ -60,4 +61,12 @@ model Timer {
   secondsRemaining Int
   todoId           String
   todo             Todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  note      String
+  todoId    String
+  createdAt DateTime @default(now())
+  todo      Todo     @relation(fields: [todoId], references: [id])
 }

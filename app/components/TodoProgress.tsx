@@ -1,12 +1,6 @@
 import { Timer } from "@prisma/client";
 
-export interface TimerProp {
-  id: string;
-  startTime: string;
-  endTime: string;
-  secondsRemaining: number;
-  todoId: string;
-}
+import type { TimerProp } from "~/routes/workspaces.$workspaceId.todos";
 
 const TodoProgress = ({
   timers: timersProp,
@@ -17,18 +11,17 @@ const TodoProgress = ({
 }) => {
   const timers = convertTimerStringsToDates(timersProp);
 
-  const heightResult = extractRelativeHeights(timers, goal * 60 * 1000 * 1000);
+  const widths = extractRelativeHeights(timers, goal * 60 * 1000 * 1000);
 
-  const dayHeight = 50;
-
-  // if (heightResult) {
-  //   [dayHeight] = heightResult;
-  // }
+  let todoWidth = 0;
+  if (widths) {
+    [todoWidth] = widths;
+  }
 
   return (
     <div
-      style={{ width: `${dayHeight}%` }}
-      className=" absolute left-0 top-0 bg-my-tertiary bg-opacity-10 h-full"
+      style={{ width: `${todoWidth}%` }}
+      className=" absolute left-0 top-0 bg-black bg-opacity-10 h-full"
     ></div>
   );
 };

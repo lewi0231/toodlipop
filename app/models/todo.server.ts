@@ -7,7 +7,27 @@ export function getTodo({
 }: Pick<Todo, "id"> ) {
   return prisma.todo.findFirst({
     where: { id },
+    include: {
+      timers: true,
+      subtask: true
+    }
   });
+}
+
+export function updateTodo({
+  id, title
+}: Pick<Todo, "id" | "title">){
+  try {
+    return prisma.todo.update({
+      where: {id},
+      data: {
+        title: title
+      },
+
+    })
+  } catch (error){
+    throw new Response("Unable to locate a todo with that id", { status: 500})
+  }
 }
 
 export function getTodoListItems({ workspaceId }: { workspaceId: Workspace['id'] }) {

@@ -4,7 +4,7 @@ interface IconProps {
   altText: string;
 }
 
-const Icon = ({ filename, handleOnClick, altText }: IconProps) => {
+const Icon = ({ filename, altText }: IconProps) => {
   return (
     <div>
       <img src={`../images/${filename}`} alt={altText} />

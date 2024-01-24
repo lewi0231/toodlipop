@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "Subtask" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "note" TEXT NOT NULL,
+    "todoId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Subtask_todoId_fkey" FOREIGN KEY ("todoId") REFERENCES "Todo" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);

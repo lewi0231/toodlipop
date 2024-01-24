@@ -1,66 +1,102 @@
-import type { Timer } from "@prisma/client";
 import { useEffect, useState } from "react";
 
-import GoalProgressBar from "./GoalProgressBar";
+import { TimerProp } from "~/routes/workspaces.$workspaceId.todos";
+
+import Spinner from "./Spinner";
+import TodoProgress from "./TodoProgress";
+
+const DEFAULT_TIMER_DURATION = 30;
 
 const TimerComponent = ({
-  secondsRemaining,
   isTimerRunning = false,
   handleOnTimeEnd,
-  handleTimerCountdown,
   timers,
   todoId,
+  goal,
 }: {
-  secondsRemaining: number;
   isTimerRunning: boolean;
-  handleOnTimeEnd: (
-    startTime: Date,
-    endTime: Date,
-    secondsRemaining: number,
-    todoId: string,
-  ) => void;
-  handleTimerCountdown: () => void;
-  timers: Timer[];
+  handleOnTimeEnd: () => void;
+  timers: TimerProp[];
   todoId: string;
+  goal: number;
 }) => {
-  const { dayHours, weekHours, monthHours } = calculateTotalTimes(timers);
-
-  const [startTime, setStartTime] = useState<Date>();
+  const [secondsRemaining, setSecondsRemaining] = useState<number>();
 
   useEffect(() => {
-    if (secondsRemaining === 0 && startTime) {
-      handleOnTimeEnd(startTime, new Date(), secondsRemaining, todoId);
+    if (typeof secondsRemaining !== "number") {
+      setSecondsRemaining(() => {
+        const storage = JSON.parse(localStorage.getItem(todoId) ?? "{}");
+
+        if (storage?.secondsRemaining) {
+          return storage.secondsRemaining;
+        } else {
+          return DEFAULT_TIMER_DURATION;
+        }
+      });
     }
+
+    const handleTimerCountdown = () => {
+      setSecondsRemaining((prev) => {
+        if (prev !== undefined) {
+          return prev - 1;
+        }
+      });
+    };
 
     let intervalId: NodeJS.Timeout;
     if (isTimerRunning) {
-      if (!startTime) {
-        setStartTime(new Date());
-      }
       intervalId = setInterval(handleTimerCountdown, 1000);
+
+      console.log("seconds:", secondsRemaining);
+
+      if (secondsRemaining !== undefined && secondsRemaining < 0) {
+        handleOnTimeEnd();
+        setSecondsRemaining(DEFAULT_TIMER_DURATION);
+        clearInterval(intervalId);
+      }
+    } else {
+      if (secondsRemaining) {
+        localStorage.setItem(
+          todoId,
+          JSON.stringify({
+            secondsRemaining,
+          }),
+        );
+      }
     }
 
     return () => {
       clearInterval(intervalId);
+
+      if (secondsRemaining && secondsRemaining > 0) {
+        localStorage.setItem(
+          todoId,
+          JSON.stringify({
+            secondsRemaining,
+          }),
+        );
+      }
     };
   }, [
-    isTimerRunning,
-    secondsRemaining,
     handleOnTimeEnd,
-    startTime,
-    handleTimerCountdown,
+    setSecondsRemaining,
+    isTimerRunning,
     todoId,
+    secondsRemaining,
   ]);
 
   return (
-    <div className="w-1/2 flex relative gap-5">
-      <GoalProgressBar height={dayHeight} />
-      <GoalProgressBar height={weekHeight} />
-      <GoalProgressBar height={monthHeight} />
-      <div className=" absolute -right-2 h-full rotate-90 text-sm opacity-50">
-        <div>{extractTimeFormat(secondsRemaining)}</div>
+    <>
+      <TodoProgress timers={timers} goal={goal} />
+
+      <div className=" absolute right-4 h-full rotate-90 text-sm opacity-80">
+        {secondsRemaining ? (
+          <div>{extractTimeFormat(secondsRemaining)}</div>
+        ) : (
+          <Spinner showSpinner={true} />
+        )}
       </div>
-    </div>
+    </>
   );
 };
 
@@ -74,56 +110,6 @@ function extractTimeFormat(timeLeft: number) {
   console.debug("Extracted time format: ", minuteString, secondsString);
 
   return `${minuteString}:${secondsString}`;
-}
-
-function calculateTotalTimes(timers: Timer[]) {
-  if (!timers) {
-    return { monthHeight: 0, weekHeight: 0, dayHeight: 0 };
-  }
-  // temporary
-  const [dayHours, weekHours, monthHours] = timers.reduce(
-    (accumulator, timer) => {
-      const { startTime, endTime } = timer;
-      const startDay = subtractDate("day", startTime);
-      const startWeek = subtractDate("week", startTime);
-      const startMonth = subtractDate("month", startTime);
-
-      const timerDuration = endTime.getTime() - startTime.getTime();
-
-      if (startTime.getTime() > startDay.getTime()) {
-        accumulator[0] += timerDuration;
-      }
-
-      if (startTime.getTime() > startWeek.getTime()) {
-        accumulator[1] += timerDuration;
-      }
-
-      if (startTime.getTime() > startMonth.getTime()) {
-        accumulator[2] += timerDuration;
-      }
-      return accumulator;
-    },
-    [0, 0, 0],
-  );
-
-  const tallyObject = { dayHours, weekHours, monthHours };
-  console.debug("Calculated the following hours: ", tallyObject);
-
-  return tallyObject;
-}
-
-function subtractDate(type: "month" | "day" | "week", startTime: Date) {
-  const date = new Date();
-  if (type === "day") {
-    date.setHours(startTime.getHours() - 24);
-  }
-  if (type === "week") {
-    date.setDate(startTime.getDate() - 7);
-  }
-  if (type === "month") {
-    date.setMonth(startTime.getMonth() - 1);
-  }
-  return date;
 }
 
 export default TimerComponent;

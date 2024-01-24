@@ -50,7 +50,7 @@ export default function WorkspacesPage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="flex items-center justify-between bg-my-secondary p-4 text-black">
+      <header className="flex items-center justify-between bg-my-primary p-4 text-black">
         <h1 className="text-3xl font-bold">
           <Link to=".">Toodlipop</Link>
         </h1>
@@ -58,24 +58,24 @@ export default function WorkspacesPage() {
         <Form action="/logout" method="post">
           <button
             type="submit"
-            className="rounded bg-my-tertiary px-4 py-2 text-my-primary hover:bg-my-secondary active:bg-my-secondary"
+            className="rounded bg-my-tertiary px-4 py-2 text-my-secondary hover:bg-my-secondary hover:text-my-tertiary active:bg-my-secondary"
           >
             Logout
           </button>
         </Form>
       </header>
 
-      <main className="flex h-full bg-opacity-40 bg-my-secondary">
-        <div className="w-60">
+      <main className="flex h-full bg-my-primary-lighten-02">
+        <div className="w-72">
           <Form
             className="flex flex-col text-left"
             ref={inputFormRef}
             method="post"
           >
             <input
-              className="m-0 w-full block p-4 "
+              className="m-0 w-full block p-4 bg-my-primary-lighten-03 outline-none"
               type="text"
-              placeholder="+ create workspace and hit enter"
+              placeholder="+ create workspace"
               disabled={isSubmitting}
               name="title"
               id="title"
