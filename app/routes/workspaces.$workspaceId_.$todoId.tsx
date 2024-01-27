@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
-import { useState } from "react";
+import { useRef } from "react";
 
 import { createSubtask } from "~/models/subtask.server";
 import { getTodo } from "~/models/todo.server";
@@ -32,8 +32,8 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
 };
 
 const TodoDetailPage = () => {
-  const [subtaskInput, setSubtaskInput] = useState<string>();
   const { todo } = useLoaderData<typeof loader>();
+  const inputRef = useRef<HTMLFormElement>(null);
 
   return (
     <div className=" min-h-lvh pl-20 bg-my-secondary-lighten-03">
@@ -61,20 +61,25 @@ const TodoDetailPage = () => {
         <div className=" bg-slate-400 h-1/3"></div>
       </div>
       <hr />
-      <div className="w-1/2">
-        <Form method="post">
+      <div className="w-1/2 pt-5">
+        <Form method="post" ref={inputRef} className="cursor-crosshair">
           <input
-            className="w-full h-10 outline-none"
+            className="w-full h-10 outline-none "
             type="text"
             name="subtask"
             placeholder="+ add a sub task"
-            value={subtaskInput}
-            onChange={(e) => setSubtaskInput(e.target.value)}
           />
         </Form>
-        <div>
+        <div className="pt-3 flex gap-5">
           {todo.subtask.map((task) => {
-            return <div key={task.id}>{task.note}</div>;
+            return (
+              <div
+                className="shadow-md text-slate-800 text-md p-3 rounded-md bg-slate-100"
+                key={task.id}
+              >
+                {task.note}
+              </div>
+            );
           })}
         </div>
       </div>

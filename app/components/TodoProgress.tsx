@@ -1,6 +1,6 @@
 import { Timer } from "@prisma/client";
 
-import type { TimerProp } from "~/routes/workspaces.$workspaceId.todos";
+import { TimerProp } from "~/types/types";
 
 const TodoProgress = ({
   timers: timersProp,
@@ -11,7 +11,7 @@ const TodoProgress = ({
 }) => {
   const timers = convertTimerStringsToDates(timersProp);
 
-  const widths = extractRelativeHeights(timers, goal * 60 * 1000 * 1000);
+  const widths = extractRelativeHeights(timers, goal * 60 * 60 * 1000);
 
   let todoWidth = 0;
   if (widths) {
@@ -27,7 +27,6 @@ const TodoProgress = ({
 };
 
 function calculateTotalTimes(timers: Timer[]) {
-  console.debug("Timers to be calculated are:", timers);
   const [dayMS, weekMS, monthMS] = timers.reduce(
     (accumulator, timer) => {
       const { startTime, endTime } = timer;
@@ -65,7 +64,6 @@ function extractRelativeHeights(timers: Timer[] | undefined, goal: number) {
   }
 
   const result = calculateTotalTimes(timers);
-  console.log(result, goal);
   if (!result) {
     console.debug("timers not able to be calculated: no result");
     return null;

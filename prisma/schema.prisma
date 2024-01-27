@@ -34,16 +34,19 @@ model Note {
 }
 
 model Todo {
-  id          String    @id @default(cuid())
+  id          String    @id
   title       String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  complete    Boolean   @default(false)
-  goal        Float     @default(1.0)
+  category    String    @default("current")
+  goal        Float     @default(1)
+  order       Int
   workspaceId String
   timers      Timer[]
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   subtask     Subtask[]
+
+  @@index([order, category])
 }
 
 model Workspace {

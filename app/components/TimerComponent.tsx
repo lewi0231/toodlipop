@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { TimerProp } from "~/routes/workspaces.$workspaceId.todos";
+import { TimerProp } from "~/types/types";
 
 import Spinner from "./Spinner";
 import TodoProgress from "./TodoProgress";
@@ -106,8 +106,6 @@ function extractTimeFormat(timeLeft: number) {
 
   const minuteString = `${minutes < 10 ? "0" + minutes : minutes}`;
   const secondsString = `${seconds < 10 ? "0" + seconds : seconds}`;
-
-  console.debug("Extracted time format: ", minuteString, secondsString);
 
   return `${minuteString}:${secondsString}`;
 }
