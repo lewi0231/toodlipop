@@ -79,7 +79,7 @@ export default function WorkspaceDetailsPage() {
           submit(formData, { method: "post", navigate: false });
 
           invariant(inputFormRef.current);
-          inputFormRef.current.value = "";
+          inputFormRef.current.reset();
         }}
       >
         <input type="hidden" name="intent" value={INTENTS.createTodo} />

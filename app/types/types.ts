@@ -8,7 +8,9 @@ export const INTENTS = {
     updateWorkspace: "updateWorkspace" as const,
     deleteSubtask: "deleteSubtask" as const,
     updateSubtask: "updateSubtask" as const,
-    updateTodo: "updateTodo" as const,
+    updateTodoTitle: "updateTodoTitle" as const,
+    updateTodoOrder: "updateTodoOrder" as const,
+    createTimer: "createTimer" as const,
 }
 
 export interface TimerProp {

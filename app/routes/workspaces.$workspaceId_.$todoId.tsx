@@ -45,7 +45,9 @@ const TodoDetailPage = () => {
         </div>
         <div className="flex justify-between">
           <h4>Completed: </h4>
-          <h4 className="w-1/2 text-left">{todo.complete.toString()}</h4>
+          <h4 className="w-1/2 text-left">
+            {todo.category !== "Complete" ? "In Progress" : "Complete"}
+          </h4>
         </div>
         <div className="flex justify-between">
           <h4 className="w-1/2">Goal (minutes per day)</h4>

@@ -1,15 +1,12 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, json } from "@remix-run/node";
-import { Link, useFetcher, useFetchers, useLoaderData } from "@remix-run/react";
-import { RiMoreFill, RiPencilLine, RiTimeLine } from "@remixicon/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useFetcher, useFetchers, useLoaderData } from "@remix-run/react";
+import { useCallback, useState } from "react";
 import invariant from "tiny-invariant";
 
-import TimerComponent from "~/components/TimerComponent";
+import { TodoCard } from "~/components/TodoCard";
 import { createTimer } from "~/models/timer.server";
-import { getTodoListItems, updateTodo } from "~/models/todo.server";
+import { deleteTodo, getTodoListItems, updateTodo } from "~/models/todo.server";
 import { CONTENT_TYPES, INTENTS, TimerProp, TodoProp } from "~/types/types";
-
-import audioSrc from "../audio/complete.wav";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { workspaceId } = params;
@@ -22,7 +19,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   let result;
   try {
     result = await getTodoListItems({ workspaceId });
-    console.log(result);
   } catch (error) {
     result = { error: true };
 
@@ -36,17 +32,24 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
-  const todoId = formData.get("todoId") as string;
+
+  const todoId = String(formData.get("todoId"));
   invariant(todoId, "need a todo id");
+
+  const intent = String(formData.get("intent"));
+  invariant(intent, "intent is required for action");
 
   let result;
   try {
-    if (formData.has("title")) {
+    if (intent === INTENTS.deleteTodo) {
+      console.debug("deleting todo ", todoId);
+      result = await deleteTodo({ id: todoId });
+    } else if (intent === INTENTS.updateTodoTitle) {
       const title = String(formData.get("title"));
 
       console.debug("Updating todo title", todoId, title);
       result = await updateTodo({ id: todoId, title });
-    } else if (formData.has("category")) {
+    } else if (intent === INTENTS.updateTodoOrder) {
       const orderString = String(formData.get("order"));
       invariant(orderString, "order is not defined");
       const order = parseInt(orderString);
@@ -55,21 +58,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       invariant(category, "category is not defined");
 
       result = await updateTodo({ id: todoId, order, category });
-    } else {
-      const todoId = formData.get("todoId") as string;
-      const startTime = new Date(formData.get("startTime")!.toString());
-      const endTime = new Date(formData.get("endTime")!.toString());
+    } else if (intent === INTENTS.createTimer) {
+      const startTime = new Date(String(formData.get("startTime")));
+      const endTime = new Date(String(formData.get("endTime")));
       const secondsRemaining = parseInt(
-        formData.get("secondsRemaining")!.toString(),
+        String(formData.get("secondsRemaining")),
       );
 
       const toBeSaved = { todoId, startTime, endTime, secondsRemaining };
-      console.log("about to save", toBeSaved);
 
       result = await createTimer(toBeSaved);
     }
   } catch (error) {
-    result = "error";
+    result = error;
   }
   console.debug("Action function result ", result);
   return json(result);
@@ -123,16 +124,29 @@ const TodoListPage = () => {
     return fetchers
       .filter((fetcher): fetcher is PendingTodo => {
         if (!fetcher.formData) return false;
-        return fetcher.formData.get("intent") === INTENTS.updateTodo;
+        return (
+          fetcher.formData.get("intent") === INTENTS.updateTodoTitle ||
+          fetcher.formData.get("intent") === INTENTS.updateTodoOrder
+        );
       })
-      .map((fetcher) => ({
-        todoId: String(fetcher.formData.get("todoId")),
-        category: String(fetcher.formData.get("category")),
-        order: parseInt(String(fetcher.formData.get("order"))),
-      }));
+      .map((fetcher) => {
+        if (fetcher.formData.get("intent") === INTENTS.updateTodoTitle) {
+          return {
+            todoId: String(fetcher.formData.get("todoId")),
+            title: String(fetcher.formData.get("title")),
+          };
+        } else {
+          return {
+            todoId: String(fetcher.formData.get("todoId")),
+            category: String(fetcher.formData.get("category")),
+            order: parseInt(String(fetcher.formData.get("order"))),
+          };
+        }
+      });
   };
 
   const updatingTodos = useUpdatingTodos();
+  console.log("There is to be updated", updatingTodos);
 
   for (const updatingTodo of updatingTodos) {
     const todo = todosById.get(updatingTodo.todoId);
@@ -209,7 +223,7 @@ export function TodoCategoryList({
       formData.append("todoId", transfer.todoId);
       formData.append("category", title.toLowerCase());
       formData.append("order", String(todoList.length + 1));
-      formData.append("intent", INTENTS.updateTodo);
+      formData.append("intent", INTENTS.updateTodoOrder);
       fetcher.submit(formData, { method: "post" });
     }
 
@@ -238,7 +252,7 @@ export function TodoCategoryList({
             : todo.order + 1;
 
           return (
-            <Todo
+            <TodoCard
               key={todo.id}
               todo={todo}
               previousOrder={previousOrder}
@@ -247,243 +261,6 @@ export function TodoCategoryList({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function usePrevious(value: boolean) {
-  const ref = useRef<boolean | undefined>();
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
-
-export function Todo({
-  todo,
-  previousOrder,
-  nextOrder,
-}: {
-  todo: TodoProp;
-  previousOrder: number;
-  nextOrder: number;
-}) {
-  const editTodoInputRef = useRef<HTMLInputElement | null>(null);
-
-  const fetcher = useFetcher();
-
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-
-  const [startTime, setStartTime] = useState<Date>();
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [title, setTitle] = useState(todo.title);
-  const [audioPlayer, setAudioPlayer] = useState<
-    HTMLAudioElement | undefined
-  >();
-  const [acceptDrop, setAcceptDrop] = useState<"none" | "bottom" | "top">();
-
-  const prevIsTimerRunning = usePrevious(isTimerRunning);
-
-  const handleOnToggleTimer = (event: React.MouseEvent<HTMLElement>) => {
-    event.preventDefault();
-    setIsTimerRunning(!isTimerRunning);
-  };
-
-  const handleEditTodo = (event: React.MouseEvent<HTMLElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsEditing(true);
-  };
-
-  const handleMoreOptions = (event: React.MouseEvent<HTMLElement>) => {
-    event.preventDefault();
-  };
-
-  const submitTodoTitleChange = () => {
-    const formData = new FormData();
-    formData.append("todoId", todo.id.toString());
-    formData.append("title", title.toString());
-    fetcher.submit(formData, {
-      method: "post",
-    });
-
-    setIsEditing(false);
-  };
-
-  const handleOnTimeEnd = () => {
-    // Save to db
-    if (startTime) {
-      const formData = new FormData();
-      formData.append("startTime", startTime.toISOString());
-      formData.append("endTime", new Date().toISOString());
-      formData.append("secondsRemaining", "0");
-      formData.append("todoId", todo.id.toString());
-      fetcher.submit(formData, {
-        method: "post",
-      });
-    }
-
-    if (audioPlayer) {
-      audioPlayer.play();
-    }
-
-    setIsTimerRunning(false);
-    setStartTime(undefined);
-
-    if (Notification.permission === "default") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          new Notification("Timer completed!", {
-            body: "Your timer has finished!",
-          });
-        }
-      });
-    } else if (Notification.permission === "granted") {
-      new Notification("Timer completed!", {
-        body: "Your timer has finished!",
-      });
-    }
-  };
-
-  const handleOnDragOver = (event: React.DragEvent) => {
-    if (event.dataTransfer.types.includes(CONTENT_TYPES.todoCard)) {
-      event.preventDefault();
-      event.stopPropagation();
-      const rect = event.currentTarget.getBoundingClientRect();
-      const midPoint = (rect.top + rect.bottom) / 2;
-      setAcceptDrop(event.clientY <= midPoint ? "top" : "bottom");
-    }
-  };
-
-  const handleOnDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    let transfer;
-    try {
-      transfer = JSON.parse(event.dataTransfer.getData(CONTENT_TYPES.todoCard));
-    } catch (error) {
-      console.error("something went wrong with transfer data");
-    }
-
-    invariant(transfer.todoId, "missing todoId");
-
-    if (acceptDrop !== "none") {
-      console.log("previous", previousOrder, "next", nextOrder);
-      // reorder the current list of todos
-      const droppedOrder = acceptDrop === "top" ? previousOrder : nextOrder;
-      const moveOrder = (droppedOrder + todo.order) / 2;
-
-      console.log("moveOrder is ", moveOrder, "todoID", transfer.todoID);
-
-      // save that reorder list to the db.
-      const formData = new FormData();
-      formData.append("todoId", transfer.todoId.toString());
-      formData.append("order", moveOrder.toString());
-      formData.append("category", todo.category);
-      formData.append("intent", INTENTS.updateTodo);
-      fetcher.submit(formData, { method: "post" });
-
-      setAcceptDrop("none");
-    }
-  };
-
-  useEffect(() => {
-    if (isTimerRunning && !prevIsTimerRunning && !startTime) {
-      setStartTime(new Date());
-    }
-
-    if (isEditing) {
-      editTodoInputRef.current?.focus();
-    }
-
-    // This needs to be here because otherwise attempts to SSR - and can't.
-    if (!audioPlayer) {
-      setAudioPlayer(new Audio(audioSrc));
-    }
-  }, [isTimerRunning, prevIsTimerRunning, startTime, isEditing, audioPlayer]);
-
-  const handleOnKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      submitTodoTitleChange();
-    }
-  };
-
-  return (
-    <div
-      className={`border-2 border-transparent ${
-        acceptDrop === "top"
-          ? " border-t-red-950"
-          : acceptDrop === "bottom"
-          ? "border-b-red-950"
-          : ""
-      }`}
-    >
-      <Link
-        draggable
-        className={` rounded-md cursor-pointer active:cursor-grabbing `}
-        to={`/workspaces/${todo.workspaceId}/${todo.id}`}
-        key={todo.id}
-        onDragStart={(event) => {
-          event.dataTransfer.effectAllowed = "move";
-          event.dataTransfer.setData(
-            CONTENT_TYPES.todoCard,
-            JSON.stringify({ todoId: todo.id }),
-          );
-        }}
-        onDragOver={(e) => handleOnDragOver(e)}
-        onDragLeave={() => {
-          setAcceptDrop("none");
-        }}
-        onDrop={handleOnDrop}
-      >
-        <div className=" bg-my-primary-lighten-03  w-full  rounded flex h-12 box-border gap-5 relative group shadow-md hover:shadow-lg hover:bg-my-primary-lighten-03 hover:bg-opacity-60 bg-opacity">
-          <div className="flex items-center absolute top-0 left-0 h-full w-full">
-            {isEditing ? (
-              <input
-                ref={editTodoInputRef}
-                className=" w-full h-full outline-none pl-10 cursor-text bg-my-primary-lighten-03 bg-opacity-70"
-                type="text"
-                value={title}
-                onBlur={() => submitTodoTitleChange()}
-                onChange={(e) => setTitle(e.target.value)}
-                onClick={(e) => e.preventDefault()}
-                onKeyDown={handleOnKeyDown}
-              />
-            ) : (
-              <h1 className="cursor-pointer w-full pl-10 text-my-primary-darken-04">
-                {title}
-              </h1>
-            )}
-          </div>
-          <TimerComponent
-            isTimerRunning={isTimerRunning}
-            handleOnTimeEnd={handleOnTimeEnd}
-            todoId={todo.id}
-            timers={todo.timers ?? []}
-            goal={todo.goal}
-          />
-          <div className="absolute hidden top-0 right-20 bg-my-primary-lighten-03 bg-opacity-50 items-center h-1/2 w-1/4 text-sm rounded group-hover:flex group-hover:justify-between px-3 shadow-md">
-            <button onClick={handleEditTodo}>
-              <RiPencilLine className="hover:opacity-50" color="black" />
-            </button>
-            <button onClick={handleOnToggleTimer}>
-              <RiTimeLine
-                className=" hover:opacity-50"
-                size={20}
-                color="black"
-              />
-            </button>
-            <button onClick={handleMoreOptions}>
-              <RiMoreFill
-                className=" hover:opacity-50"
-                size={20}
-                color="black"
-              />
-            </button>
-          </div>
-        </div>
-      </Link>
     </div>
   );
 }
