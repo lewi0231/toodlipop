@@ -1,12 +1,14 @@
-# Remix Indie Stack
+# Toodlipop
 
-![The Remix Indie Stack](https://repository-images.githubusercontent.com/465928257/a241fa49-bd4d-485a-a2a5-5cb8e4ee0abf)
+This project began with the idea of a promodoro timer, todo app.  It looks like it will grow beyond that with the following rough idea.
 
-Learn more about [Remix Stacks](https://remix.run/stacks).
+- Have a view to having mentors / supporters or your task based projects / or projects in general.
+- Loose idea is that people will be able to indicate that they desire to use a coaching or mentoring service.
+-   More specifically this will look like 'a person makes their task public' -> 'they include milestone information together with information a due date' -> 'a task will be made available to "mentors" who can then indicate that they would like to support you with the task'
 
-```sh
-npx create-remix@latest --template remix-run/indie-stack
-```
+
+
+This project utilises the 'Indie Remix Stack'.
 
 ## What's in the stack
 
